@@ -3,74 +3,155 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pothole Repair Robot - Control Dashboard</title>
+  <title>Pothole Repair - Report Pothole</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f6f9;
+    * {
+      box-sizing: border-box;
       margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #eef2f7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
       padding: 20px;
+    }
+    .card {
+      background: #ffffff;
+      width: 100%;
+      max-width: 480px;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
       text-align: center;
     }
     h1 {
-      color: #333;
+      color: #1e293b;
+      margin-bottom: 8px;
+      font-size: 24px;
     }
-    .card {
-      background: white;
-      max-width: 500px;
-      margin: 20px auto;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    p.subtitle {
+      color: #64748b;
+      margin-bottom: 24px;
+      font-size: 14px;
     }
-    .btn {
-      display: inline-block;
-      padding: 12px 24px;
-      margin: 10px;
+    .form-group {
+      text-align: left;
+      margin-bottom: 18px;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #334155;
+      font-size: 14px;
+    }
+    input[type="text"], input[type="file"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 14px;
+      background-color: #f8fafc;
+    }
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #2563eb;
+      background: #fff;
+    }
+    .preview-box {
+      margin-top: 10px;
+      width: 100%;
+      height: 180px;
+      border: 2px dashed #cbd5e1;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      background: #f8fafc;
+    }
+    .preview-box img {
+      max-width: 100%;
+      max-height: 100%;
+      display: none;
+      object-fit: cover;
+    }
+    .preview-placeholder {
+      color: #94a3b8;
+      font-size: 13px;
+    }
+    .btn-submit {
+      width: 100%;
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 8px;
       font-size: 16px;
       font-weight: bold;
-      color: white;
-      background-color: #007bff;
-      border: none;
-      border-radius: 6px;
       cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.2s ease;
+    }
+    .btn-submit:hover {
+      background: #1d4ed8;
+    }
+    .db-link {
+      display: inline-block;
+      margin-top: 18px;
+      color: #2563eb;
       text-decoration: none;
-      transition: background 0.3 PIB;
+      font-size: 14px;
+      font-weight: 600;
     }
-    .btn:hover {
-      background-color: #0056b3;
+    .db-link:hover {
+      text-decoration: underline;
     }
-    .status-box {
-      margin-top: 15px;
-      padding: 10px;
-      border-radius: 6px;
-      background: #e9ecef;
-      font-weight: bold;
-      color: #495057;
+    #msg {
+      margin-top: 12px;
+      font-size: 14px;
+      font-weight: 600;
     }
   </style>
 
-  <!-- Firebase v8 SDK scripts -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
 <body>
 
-  <h1>Pothole Repair Robot</h1>
-
   <div class="card">
-    <h2>Robot Live Control & Status</h2>
-    <p>ഡാറ്റാബേസിലേക്ക് വിവരങ്ങൾ നൽകാനും ലൈവ് വിവരങ്ങൾ കാണാനും താഴെ ഉപയോഗിക്കുക.</p>
-    
-    <div id="status" class="status-box">Connecting to Firebase...</div>
-    
-    <div style="margin-top: 20px;">
-      <a href="database.html" class="btn">View Database Records</a>
-    </div>
+    <h1>Pothole Repair</h1>
+    <p class="subtitle">റോഡിലെ കുഴികൾ റിപ്പോർട്ട് ചെയ്യുക</p>
+
+    <form id="potholeForm">
+      <div class="form-group">
+        <label for="location">Location / റോഡ് വിവരങ്ങൾ:</label>
+        <input type="text" id="location" placeholder="ഉദാഹരണത്തിന്: Main Road, Near Bridge" required>
+      </div>
+
+      <div class="form-group">
+        <label for="imageInput">Pothole Image:</label>
+        <input type="file" id="imageInput" accept="image/*" required>
+        <div class="preview-box">
+          <span class="preview-placeholder" id="placeholderText">ചിത്രം സെലക്ട് ചെയ്യുമ്പോൾ ഇവിടെ കാണാം</span>
+          <img id="imagePreview" alt="Pothole Preview">
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit" id="submitBtn">Submit Report</button>
+      <div id="msg"></div>
+    </form>
+
+    <a href="database.html" class="db-link">View Database Records &rarr;</a>
   </div>
 
   <script>
-    // Firebase Configuration
+    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyCmpJq4oV5Iq4wG1gPVc8gA9a2S3vgPPIc",
       authDomain: "pothole-repair-9555f.firebaseapp.com",
@@ -82,28 +163,66 @@
       measurementId: "G-JMB126B4HP"
     };
 
-    // Firebase Initialize ചെയ്യുക
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
     }
     const db = firebase.database();
 
-    // റിയൽടൈം സ്റ്റാറ്റസ് ചെക്ക് ചെയ്യൽ
-    const statusDiv = document.getElementById('status');
-    const statusRef = db.ref('robot/status');
+    let base64Image = "";
+    const imageInput = document.getElementById('imageInput');
+    const imagePreview = document.getElementById('imagePreview');
+    const placeholderText = document.getElementById('placeholderText');
+    const msg = document.getElementById('msg');
+    const submitBtn = document.getElementById('submitBtn');
 
-    statusRef.on('value', (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        statusDiv.innerText = "Robot Status: " + data;
-        statusDiv.style.color = "#28a745";
-      } else {
-        statusDiv.innerText = "Robot Status: Standby / Connected to Firebase";
-        statusDiv.style.color = "#007bff";
+    // ഇമേജ് Base64 സ്ട്രിംഗ് ആക്കി മാറ്റൽ
+    imageInput.addEventListener('change', function() {
+      const file = this.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          base64Image = e.target.result;
+          imagePreview.src = base64Image;
+          imagePreview.style.display = 'block';
+          placeholderText.style.display = 'none';
+        }
+        reader.readAsDataURL(file);
       }
-    }, (error) => {
-      statusDiv.innerText = "Connection Error: " + error.message;
-      statusDiv.style.color = "#dc3545";
+    });
+
+    // ഫോം സബ്മിഷൻ & ഡാറ്റാബേസിലേക്ക് അയക്കൽ
+    document.getElementById('potholeForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const locationVal = document.getElementById('location').value.trim();
+
+      if (!base64Image) {
+        msg.style.color = '#dc2626';
+        msg.innerText = 'ദയവായി ഒരു ചിത്രം തിരഞ്ഞെടുക്കുക.';
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Submitting...';
+
+      const newRecordRef = db.ref('pothole_reports').push();
+      newRecordRef.set({
+        location: locationVal,
+        image: base64Image,
+        timestamp: new Date().toLocaleString()
+      }).then(() => {
+        msg.style.color = '#16a34a';
+        msg.innerText = 'റിപ്പോർട്ട് വിജയകരമായി സബ്മിറ്റ് ചെയ്തു!';
+        document.getElementById('potholeForm').reset();
+        imagePreview.style.display = 'none';
+        placeholderText.style.display = 'block';
+        base64Image = "";
+      }).catch((err) => {
+        msg.style.color = '#dc2626';
+        msg.innerText = 'Error: ' + err.message;
+      }).finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Submit Report';
+      });
     });
   </script>
 
