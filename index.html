@@ -126,19 +126,19 @@
 
   <div class="card">
     <h1>Pothole Repair</h1>
-    <p class="subtitle">റോഡിലെ കുഴികൾ റിപ്പോർട്ട് ചെയ്യുക</p>
+    <p class="subtitle">report the potholes in the road</p>
 
     <form id="potholeForm">
       <div class="form-group">
-        <label for="location">Location / റോഡ് വിവരങ്ങൾ:</label>
-        <input type="text" id="location" placeholder="ഉദാഹരണത്തിന്: Main Road, Near Bridge" required>
+        <label for="location">Location / location:</label>
+        <input type="text" id="location" placeholder="Example: Main Road, Near Bridge" required>
       </div>
 
       <div class="form-group">
         <label for="imageInput">Pothole Image:</label>
         <input type="file" id="imageInput" accept="image/*" required>
         <div class="preview-box">
-          <span class="preview-placeholder" id="placeholderText">ചിത്രം സെലക്ട് ചെയ്യുമ്പോൾ ഇവിടെ കാണാം</span>
+          <span class="preview-placeholder" id="placeholderText">Select an image to preview</span>
           <img id="imagePreview" alt="Pothole Preview">
         </div>
       </div>
@@ -197,7 +197,7 @@
 
       if (!base64Image) {
         msg.style.color = '#dc2626';
-        msg.innerText = 'ദയവായി ഒരു ചിത്രം തിരഞ്ഞെടുക്കുക.';
+        msg.innerText = 'Please select an image.';
         return;
       }
 
@@ -211,7 +211,7 @@
         timestamp: new Date().toLocaleString()
       }).then(() => {
         msg.style.color = '#16a34a';
-        msg.innerText = 'റിപ്പോർട്ട് വിജയകരമായി സബ്മിറ്റ് ചെയ്തു!';
+        msg.innerText = 'report submitted successfully!';
         document.getElementById('potholeForm').reset();
         imagePreview.style.display = 'none';
         placeholderText.style.display = 'block';
