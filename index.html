@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pothole Repairing - Report Issue</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+    <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+      <h1 class="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span>
+        RoadCare Portal
+      </h1>
+      <a href="database.html" class="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+        View Database &rarr;
+      </a>
+    </div>
+  </header>
+
+  <main class="max-w-2xl mx-auto px-4 py-10 space-y-8">
+    <div class="text-center space-y-2">
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">Pothole Repairing</h2>
+      <p class="text-slate-600 text-base sm:text-lg">Report neighborhood road issues to get them patched quickly.</p>
+    </div>
+
+    <!-- Main Report Card -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+      <div class="border-b border-slate-100 pb-4">
+        <h3 class="text-xl font-semibold text-slate-900">Report a New Pothole</h3>
+        <p class="text-xs text-slate-500 mt-1">Fill in the details below to notify the repair maintenance team.</p>
+      </div>
+
+      <form id="potholeForm" class="space-y-5">
+        <div>
+          <label for="locationInput" class="block text-sm font-medium text-slate-700 mb-1.5">
+            Location <span class="text-rose-500">*</span>
+          </label>
+          <input 
+            type="text" 
+            id="locationInput" 
+            required
+            placeholder="Enter street name, landmark, or city" 
+            class="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm outline-none transition"
+          />
+        </div>
+
+        <div>
+          <label for="imageInput" class="block text-sm font-medium text-slate-700 mb-1.5">
+            Image of Pothole <span class="text-rose-500">*</span>
+          </label>
+          <input 
+            type="file" 
+            id="imageInput" 
+            accept="image/*"
+            class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 cursor-pointer border border-slate-200 rounded-lg p-2"
+          />
+          <div id="imagePreviewContainer" class="hidden mt-3">
+            <img id="formImagePreview" src="" alt="Preview" class="w-full h-44 object-cover rounded-lg border border-slate-200" />
+          </div>
+        </div>
+
+        <button 
+          type="submit" 
+          id="submitBtn"
+          class="w-full bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-semibold py-3 px-4 rounded-xl transition duration-150 shadow-sm"
+        >
+          Submit Report
+        </button>
+      </form>
+    </div>
+
+    <!-- Verification / Confirmation Box -->
+    <div id="confirmationBox" class="hidden bg-emerald-50 border border-emerald-200 rounded-2xl p-6 sm:p-8 space-y-5">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold">✓</div>
+        <div>
+          <h4 class="text-lg font-bold text-emerald-900">Report Submitted Successfully</h4>
+          <p class="text-xs text-emerald-700">Please review your submission below to ensure all details are correct.</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-emerald-100 p-4 space-y-4">
+        <div>
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Location Submitted:</span>
+          <p id="submittedLocation" class="text-base font-medium text-slate-800 mt-0.5"></p>
+        </div>
+        <div>
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Uploaded Image:</span>
+          <div class="mt-2">
+            <img id="submittedImage" src="" alt="Uploaded pothole" class="w-full max-h-64 object-cover rounded-lg border border-slate-200 shadow-inner" />
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3 pt-2">
+        <button 
+          id="editReportBtn" 
+          type="button"
+          class="flex-1 bg-white hover:bg-slate-50 text-slate-700 font-medium py-2.5 px-4 rounded-lg border border-slate-300 text-sm transition text-center"
+        >
+          ✏️ Edit Report
+        </button>
+        <a 
+          href="database.html" 
+          class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-4 rounded-lg text-sm transition text-center"
+        >
+          View in Database &rarr;
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // --- നിങ്ങളുടെ FIREBASE CONFIG ഇവിടെ നൽകുക ---
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // Firebase Initialize ചെയ്യുക
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const form = document.getElementById('potholeForm');
+    const locationInput = document.getElementById('locationInput');
+    const imageInput = document.getElementById('imageInput');
+    const formImagePreview = document.getElementById('formImagePreview');
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    const confirmationBox = document.getElementById('confirmationBox');
+    const submittedLocation = document.getElementById('submittedLocation');
+    const submittedImage = document.getElementById('submittedImage');
+    const editReportBtn = document.getElementById('editReportBtn');
+
+    let currentImageData = '';
+    let currentRecordKey = null;
+
+    // ഫോട്ടോയുടെ സൈസ് കുറച്ച് Base64 ആക്കി മാറ്റൽ
+    imageInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const maxDim = 800; // വേഗത്തിൽ അപ്‌ലോഡ് ആവാൻ ഇമേജ് ഒപ്റ്റിമൈസ് ചെയ്യുന്നു
+            let width = img.width;
+            let height = img.height;
+            if (width > height && width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            currentImageData = canvas.toDataURL('image/jpeg', 0.7);
+            formImagePreview.src = currentImageData;
+            imagePreviewContainer.classList.remove('hidden');
+          };
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // ക്ലൗഡിലേക്ക് വിവരങ്ങൾ അയക്കുന്നു
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const locationVal = locationInput.value.trim();
+      if (!locationVal) return;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting to Cloud...';
+
+      const payload = {
+        location: locationVal,
+        image: currentImageData || 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=600&auto=format&fit=crop&q=80',
+        timestamp: new Date().toLocaleString()
+      };
+
+      if (currentRecordKey) {
+        // Edit ചെയ്യുമ്പോൾ നിലവിലുള്ളത് അപ്ഡേറ്റ് ചെയ്യുന്നു
+        db.ref('reports/' + currentRecordKey).update(payload).then(() => {
+          showConfirmation(locationVal, payload.image);
+        });
+      } else {
+        // പുതിയ റിപ്പോർട്ട് ക്ലൗഡിലേക്ക് സേവ് ചെയ്യുന്നു
+        const newRef = db.ref('reports').push();
+        currentRecordKey = newRef.key;
+        newRef.set(payload).then(() => {
+          showConfirmation(locationVal, payload.image);
+        });
+      }
+    });
+
+    function showConfirmation(location, image) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit Report';
+      submittedLocation.textContent = location;
+      submittedImage.src = image;
+      confirmationBox.classList.remove('hidden');
+      confirmationBox.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    editReportBtn.addEventListener('click', function() {
+      confirmationBox.classList.add('hidden');
+      locationInput.focus();
+    });
+  </script>
+</body>
+</html>

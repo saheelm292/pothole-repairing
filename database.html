@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pothole Repair Database</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+      <a href="index.html" class="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+        &larr; Back to Report Form
+      </a>
+      <button 
+        id="clearAllBtn" 
+        class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-medium text-sm px-4 py-2 rounded-lg transition-colors"
+      >
+        Clear All Results
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-10 space-y-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-5 gap-3">
+      <div>
+        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Pothole Repair Database</h1>
+        <p class="text-slate-500 text-sm mt-1">Live cloud-synchronized view across all connected devices.</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-sm font-semibold uppercase tracking-wider text-slate-400">Section:</span>
+        <span class="bg-amber-100 text-amber-800 font-semibold px-3 py-1 rounded-full text-xs">Reports</span>
+      </div>
+    </div>
+
+    <!-- Dynamic Container for Live Reports -->
+    <div id="reportsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+    <div id="emptyState" class="hidden text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300">
+      <p class="text-slate-400 text-lg font-medium">No reports in the database yet.</p>
+      <p class="text-slate-500 text-sm mt-1">Any submission made from any phone will appear here instantly.</p>
+    </div>
+  </main>
+
+  <script>
+    // Replace with your Firebase project configuration
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const reportsContainer = document.getElementById('reportsContainer');
+    const emptyState = document.getElementById('emptyState');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+
+    // Real-time synchronization listener for database updates
+    db.ref('reports').on('value', (snapshot) => {
+      const data = snapshot.val();
+      if (!data) {
+        reportsContainer.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      const keys = Object.keys(data).reverse(); // Display latest entries first
+
+      reportsContainer.innerHTML = keys.map((key) => {
+        const item = data[key];
+        return `
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition">
+            <div class="relative h-48 w-full bg-slate-100">
+              <img 
+                src="${item.image}" 
+                alt="Pothole" 
+                class="w-full h-full object-cover"
+              />
+              <span class="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-sm text-white text-xs font-mono px-2.5 py-1 rounded-md">
+                ${key.slice(-6).toUpperCase()}
+              </span>
+            </div>
+
+            <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+              <div class="space-y-2">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Location</span>
+                <p class="text-base font-semibold text-slate-900 leading-snug break-words">
+                  ${item.location}
+                </p>
+              </div>
+
+              <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                <span>${item.timestamp || 'Live'}</span>
+                <button 
+                  onclick="deleteReport('${key}')" 
+                  class="text-rose-500 hover:text-rose-700 font-medium cursor-pointer"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    });
+
+    // Delete single report
+    window.deleteReport = function(key) {
+      if (confirm('Delete this report from database?')) {
+        db.ref('reports/' + key).remove();
+      }
+    };
+
+    // Delete all reports
+    clearAllBtn.addEventListener('click', function() {
+      if (confirm('Are you sure you want to delete ALL reports from the database? This affects all connected devices.')) {
+        db.ref('reports').remove();
+      }
+    });
+  </script>
+</body>
+</html>
