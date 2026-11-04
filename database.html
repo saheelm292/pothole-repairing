@@ -16,7 +16,7 @@
       padding: 30px 15px;
     }
     .container {
-      max-width: 950px;
+      max-width: 1000px;
       margin: 0 auto;
       background: white;
       padding: 25px;
@@ -72,6 +72,21 @@
       object-fit: cover;
       border-radius: 6px;
       border: 1px solid #cbd5e1;
+    }
+    .map-btn {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 5px 10px;
+      background-color: #0284c7;
+      color: white;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 4px;
+      transition: background 0.2s ease;
+    }
+    .map-btn:hover {
+      background-color: #0369a1;
     }
     .btn-delete {
       background-color: #ef4444;
@@ -152,8 +167,19 @@
           const item = data[key];
           const row = document.createElement('tr');
 
+          // മാപ്പ് ലിങ്ക് തയ്യാറാക്കൽ (GPS കോർഡിനേറ്റ്സ് ഉണ്ടെങ്കിൽ അത് ഉപയോഗിക്കും)
+          let mapUrl = '';
+          if (item.latitude && item.longitude) {
+            mapUrl = `https://www.google.com/maps?q=${item.latitude},${item.longitude}`;
+          } else if (item.location) {
+            mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}`;
+          }
+
           row.innerHTML = `
-            <td><strong>${item.location || 'Not Specified'}</strong></td>
+            <td>
+              <strong>${item.location || 'Not Specified'}</strong><br>
+              ${mapUrl ? `<a href="${mapUrl}" target="_blank" class="map-btn">📍 Open in Google Maps</a>` : ''}
+            </td>
             <td>
               ${item.image ? `<img src="${item.image}" class="pothole-img" alt="Pothole">` : 'No Image'}
             </td>

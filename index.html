@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pothole Repair - Report Pothole</title>
+  
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
   <style>
     * {
       box-sizing: border-box;
@@ -22,7 +26,7 @@
     .card {
       background: #ffffff;
       width: 100%;
-      max-width: 480px;
+      max-width: 520px;
       padding: 30px;
       border-radius: 12px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.08);
@@ -61,6 +65,31 @@
       outline: none;
       border-color: #2563eb;
       background: #fff;
+    }
+    .loc-btn {
+      width: 100%;
+      background: #0284c7;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      margin-bottom: 10px;
+      transition: background 0.2s ease;
+    }
+    .loc-btn:hover {
+      background: #0369a1;
+    }
+    #map {
+      width: 100%;
+      height: 200px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      margin-top: 6px;
+      z-index: 1;
     }
     .preview-box {
       margin-top: 10px;
@@ -121,6 +150,8 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <!-- Leaflet Map JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 
@@ -132,6 +163,11 @@
       <div class="form-group">
         <label for="location">Location:</label>
         <input type="text" id="location" placeholder="Example: Main Road, Near Bridge" required>
+        
+        <button type="button" class="loc-btn" id="geoBtn">📍 Get Current GPS Location</button>
+        
+        <label style="font-size: 12px; color: #64748b;">Or tap on the map to mark spot:</label>
+        <div id="map"></div>
       </div>
 
       <div class="form-group">
@@ -168,6 +204,65 @@
     }
     const db = firebase.database();
 
+    // Map Setup (Leaflet)
+    let selectedLat = null;
+    let selectedLng = null;
+
+    // Default Kerala coordinates
+    const defaultLat = 10.8505;
+    const defaultLng = 76.2711;
+
+    const map = L.map('map').setView([defaultLat, defaultLng], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    let marker;
+
+    function setPin(lat, lng) {
+      selectedLat = lat;
+      selectedLng = lng;
+      if (marker) {
+        marker.setLatLng([lat, lng]);
+      } else {
+        marker = L.marker([lat, lng]).addTo(map);
+      }
+      map.setView([lat, lng], 16);
+      
+      const locInput = document.getElementById('location');
+      if (!locInput.value.trim() || locInput.value.includes('GPS:')) {
+        locInput.value = `GPS: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      }
+    }
+
+    // മാപ്പിൽ ടാപ്പ് ചെയ്യുമ്പോൾ പിൻ വരാൻ
+    map.on('click', function(e) {
+      setPin(e.latlng.lat, e.latlng.lng);
+    });
+
+    // മൊബൈലിലെ/ബ്രൗസറിലെ ലൈവ് ജിപിഎസ് എടുക്കാൻ
+    document.getElementById('geoBtn').addEventListener('click', function() {
+      if (navigator.geolocation) {
+        this.innerText = 'Fetching Location...';
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            setPin(lat, lng);
+            this.innerText = '✅ Location Detected';
+          },
+          (error) => {
+            alert('Location access denied or unavailable: ' + error.message);
+            this.innerText = '📍 Get Current GPS Location';
+          },
+          { enableHighAccuracy: true }
+        );
+      } else {
+        alert('Geolocation is not supported by your browser.');
+      }
+    });
+
     let base64Image = "";
     const imageInput = document.getElementById('imageInput');
     const imagePreview = document.getElementById('imagePreview');
@@ -175,7 +270,6 @@
     const msg = document.getElementById('msg');
     const submitBtn = document.getElementById('submitBtn');
 
-    // ഇമേജ് Base64 സ്ട്രിംഗ് ആക്കി മാറ്റൽ
     imageInput.addEventListener('change', function() {
       const file = this.files[0];
       if (file) {
@@ -190,7 +284,7 @@
       }
     });
 
-    // ഫോം സബ്മിഷൻ & ഡാറ്റാബേസിലേക്ക് അയക്കൽ
+    // ഡാറ്റ ഫയർബേസിലേക്ക് അയക്കുന്നു (Coordinates ഉൾപ്പെടെ)
     document.getElementById('potholeForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const locationVal = document.getElementById('location').value.trim();
@@ -207,15 +301,21 @@
       const newRecordRef = db.ref('pothole_reports').push();
       newRecordRef.set({
         location: locationVal,
+        latitude: selectedLat,
+        longitude: selectedLng,
         image: base64Image,
         timestamp: new Date().toLocaleString()
       }).then(() => {
         msg.style.color = '#16a34a';
-        msg.innerText = 'report submitted successfully!';
+        msg.innerText = 'Report submitted successfully!';
         document.getElementById('potholeForm').reset();
         imagePreview.style.display = 'none';
         placeholderText.style.display = 'block';
         base64Image = "";
+        selectedLat = null;
+        selectedLng = null;
+        if (marker) map.removeLayer(marker);
+        document.getElementById('geoBtn').innerText = '📍 Get Current GPS Location';
       }).catch((err) => {
         msg.style.color = '#dc2626';
         msg.innerText = 'Error: ' + err.message;
